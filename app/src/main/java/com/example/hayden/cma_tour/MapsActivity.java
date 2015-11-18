@@ -1,22 +1,97 @@
 package com.example.hayden.cma_tour;
 
+import android.location.Location;
+import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity {
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
+    private final String TAG = "CMU_MAP";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private GoogleApiClient mGoogleApiClient;
+    protected LocationRequest mLocationRequest;
+
+    private BufferedWriter mBufferedWriter;
+    private BufferedReader mBufferedReader;
+    private File markerFile;
+    private StringBuilder mStringBuilder;
+
+    private Button picButton;
+    private Location mCurrentLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        buildGoogleApiClient();
+
+        // set up the button
+        picButton = (Button) findViewById(R.id.photobutton);
+        picButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadMarkersFromCSV();
+            }
+        });
+
+        //Set up I/O components: Reader, Writer, StringBuilder
+        File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        markerFile = new File(dcim, "CMUMarkers.csv");
+        mStringBuilder = new StringBuilder();
+        try {
+            mBufferedWriter = new BufferedWriter(new FileWriter(markerFile));
+            mBufferedReader = new BufferedReader(new FileReader(markerFile));
+
+            String headings = "Title,Artist,Latitude,Longitude\n";
+            String entry1   = "Starry Night,Van Gogh,10,10\n";
+            String entry2   = "Painting 2,Matt Damon,-10,-10\n";
+
+            Log.d(TAG, "Writing headings to CSV");
+            //write to CSV and reset SB / flush bufferedwriter
+            mBufferedWriter.write(headings);
+            mBufferedWriter.write(entry1);
+            mBufferedWriter.write(entry2);
+
+            mStringBuilder.setLength(0);
+            mBufferedWriter.flush();
+
+        } catch (IOException ex) {
+            Log.e(TAG, "Cannot create IO component", ex);
+        }
     }
 
     @Override
@@ -68,11 +143,79 @@ public class MapsActivity extends FragmentActivity {
      * each line follows: Name,Description,Lat,Long,Floor
      */
     private void loadMarkersFromCSV(){
-        //access the file
-        //for loop:
-        //  read a line from the csv
+        String line;
+        try {
+            mBufferedReader.readLine(); //Skip header line
+            while ( (line = mBufferedReader.readLine()) != null) {
+                //Line structure is: Title, Artist, Lat, Lng
+                String[] info = line.split(",");
+                Log.d(TAG, "Title: "+info[0] + ", Artist: "+info[1] + ", Lat: "+info[2]+ ", Lng: "+info[3]);
+            }
+
+        } catch (IOException ex) {
+            Log.e(TAG, "Error reading from file", ex);
+        }
         //  create new Art_Marker for it
         //  add it to a Collection of Art_Markers
         //  add the marker to a map
+    }
+
+    /**
+     * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
+     * LocationServices API.
+     */
+    protected synchronized void buildGoogleApiClient() {
+        Log.i(TAG, "Building GoogleApiClient");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        createLocationRequest();
+    }
+
+    protected void createLocationRequest() {
+        Log.i(TAG, "Creating Location Request");
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    /**
+     * Request Location Updates
+     */
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        Log.i(TAG, "Connected to GoogleApiClient");
+
+        if (mCurrentLocation == null) {
+            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        }
+
+        startLocationUpdates();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.i(TAG, "Connection suspended");
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+    }
+
+    /**
+     * Requests location updates from the FusedLocationApi.
+     */
+    protected void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 }
