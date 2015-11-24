@@ -4,24 +4,24 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class Art_Marker {
     private String title;
-    private String desc;
+    private String artist;
     private LatLng coords;
     private int floor;
+    private String fileLocation;
 
-    public Art_Marker(String title, String desc, double lat, double lng, int floor) {
+    public Art_Marker(String title, String artist, double lat, double lng, int floor, String fileLocation) {
         this.title = title;
-        this.desc = desc;
+        this.artist = artist;
         this.coords = new LatLng(lat, lng);
         this.floor = floor;
+        this.fileLocation = fileLocation;
     }
 
     /** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Getters and Setters~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    public String getTitle() {
-        return this.title;
-    }
+    public String getTitle() { return this.title; }
 
-    public String getDesc() {
-        return this.desc;
+    public String getArtist() {
+        return this.artist;
     }
 
     public LatLng getCoords(){
@@ -32,12 +32,14 @@ public class Art_Marker {
         return this.floor;
     }
 
+    public String getFileLocation() { return this.fileLocation; }
+
     public void setTitle(String title) {
         this.title = title;
     }
 
-    public void setDesc(String desc) {
-        this.desc = desc;
+    public void setArtist(String artist) {
+        this.artist = artist;
     }
 
     public void setCoords(double lat, double lng) {

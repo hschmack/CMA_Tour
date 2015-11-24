@@ -37,6 +37,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
     private final String TAG = "CMU_MAP";
@@ -48,9 +50,19 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     private BufferedReader mBufferedReader;
     private File markerFile;
     private StringBuilder mStringBuilder;
-
     private Button picButton;
     private Location mCurrentLocation;
+
+    private ArrayList<Art_Marker> markers;
+
+    // Indexes in the CSV
+    final static int TITLE = 0;
+    final static int ARTIST = 1;
+    final static int LAT = 2;
+    final static int LNG = 3;
+    final static int FLOOR = 4;
+    final static int FILE_LOCATION = 5;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,9 +88,9 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
             mBufferedWriter = new BufferedWriter(new FileWriter(markerFile));
             mBufferedReader = new BufferedReader(new FileReader(markerFile));
 
-            String headings = "Title,Artist,Latitude,Longitude\n";
-            String entry1   = "Starry Night,Van Gogh,10,10\n";
-            String entry2   = "Painting 2,Matt Damon,-10,-10\n";
+            String headings = "Title,Artist,Latitude,Longitude,Floor,FileLocation\n";
+            String entry1   = "Starry Night,Van Gogh,10,10,1,DCIM/CMA_Photos/1_van\n";
+            String entry2   = "Painting 2,Matt Damon,-10,-10,2,DCIM/CMA_Photos/2_matt\n";
 
             Log.d(TAG, "Writing headings to CSV");
             //write to CSV and reset SB / flush bufferedwriter
@@ -144,13 +156,26 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
      */
     private void loadMarkersFromCSV(){
         String line;
+        markers = new ArrayList<Art_Marker>();
+
         try {
             mBufferedReader.readLine(); //Skip header line
             while ( (line = mBufferedReader.readLine()) != null) {
                 //Line structure is: Title, Artist, Lat, Lng
                 String[] info = line.split(",");
-                Log.d(TAG, "Title: "+info[0] + ", Artist: "+info[1] + ", Lat: "+info[2]+ ", Lng: "+info[3]);
+                Log.d(TAG, "Title: "+info[TITLE] + ", Artist: "+info[ARTIST] + ", Lat: "+info[LAT]
+                        + ", Lng: "+info[LNG] + ", Floor: "+info[FLOOR] + ", File location: "+info[FILE_LOCATION]);
+
+                Art_Marker marker =  new Art_Marker(info[TITLE],
+                                            info[ARTIST],
+                                            Double.parseDouble(info[LAT]),
+                                            Double.parseDouble(info[LNG]),
+                                            Integer.parseInt(info[FLOOR]),
+                                            info[FILE_LOCATION]);
+                markers.add(marker);
+                mMap.addMarker(new MarkerOptions().position(marker.getCoords()).title(marker.getTitle()));
             }
+
 
         } catch (IOException ex) {
             Log.e(TAG, "Error reading from file", ex);
