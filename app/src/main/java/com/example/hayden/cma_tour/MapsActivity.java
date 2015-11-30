@@ -5,6 +5,8 @@ import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -12,9 +14,13 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.IndoorBuilding;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -40,20 +46,24 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
+public class MapsActivity extends FragmentActivity
+        implements ConnectionCallbacks, OnConnectionFailedListener,
+                    LocationListener, GoogleMap.OnIndoorStateChangeListener,
+                    GoogleMap.OnCameraChangeListener {
     private final String TAG = "CMU_MAP";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private GoogleApiClient mGoogleApiClient;
     protected LocationRequest mLocationRequest;
 
     private BufferedWriter mBufferedWriter;
-    private BufferedReader mBufferedReader;
     private File markerFile;
     private StringBuilder mStringBuilder;
     private Button picButton;
     private Location mCurrentLocation;
 
-    private ArrayList<Art_Marker> markers;
+    //for keeping track of what is on the
+    public static  ArrayList<Art_Marker> filteredMarkers;
+    public static  ArrayList<Art_Marker> allMarkers;
 
     // Indexes in the CSV
     final static int TITLE = 0;
@@ -63,13 +73,22 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     final static int FLOOR = 4;
     final static int FILE_LOCATION = 5;
 
+    //map levels are counted from highest to lowest... level 2 = 0
+    final static int LEVEL_2 = 0;
+    final static int LEVEL_1 = 1;
+    final static int BASEMENT = 2;
+
+    private int currentLevel;
+
+    private LatLngBounds mMapBounds;
+    private final LatLng NE_BOUND = new LatLng(41.510087, -81.610124);
+    private final LatLng SW_BOUND = new LatLng(41.507865, -81.613096);
+    private CameraPosition lastKnownCamPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        setUpMapIfNeeded();
-        buildGoogleApiClient();
 
         // set up the button
         picButton = (Button) findViewById(R.id.photobutton);
@@ -80,17 +99,18 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
             }
         });
 
+        currentLevel = 1;
+
         //Set up I/O components: Reader, Writer, StringBuilder
         File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         markerFile = new File(dcim, "CMUMarkers.csv");
         mStringBuilder = new StringBuilder();
         try {
             mBufferedWriter = new BufferedWriter(new FileWriter(markerFile));
-            mBufferedReader = new BufferedReader(new FileReader(markerFile));
 
             String headings = "Title,Artist,Latitude,Longitude,Floor,FileLocation\n";
-            String entry1   = "Starry Night,Van Gogh,10,10,1,DCIM/CMA_Photos/1_van\n";
-            String entry2   = "Painting 2,Matt Damon,-10,-10,2,DCIM/CMA_Photos/2_matt\n";
+            String entry1   = "Starry Night,Van Gogh,41.508513,-81.611770,1,DCIM/CMA_Photos/1_van\n";
+            String entry2   = "Painting 2,Matt Damon,41.508712,-81.611252,2,DCIM/CMA_Photos/2_matt\n";
 
             Log.d(TAG, "Writing headings to CSV");
             //write to CSV and reset SB / flush bufferedwriter
@@ -104,6 +124,9 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         } catch (IOException ex) {
             Log.e(TAG, "Cannot create IO component", ex);
         }
+
+        setUpMapIfNeeded();
+        buildGoogleApiClient();
     }
 
     @Override
@@ -147,7 +170,15 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        LatLng cmaLoc = new LatLng(41.5089, -81.61169);
+        mMapBounds = new LatLngBounds(SW_BOUND, NE_BOUND);
+        lastKnownCamPosition = mMap.getCameraPosition();
+
+        mMap.setOnIndoorStateChangeListener(this);
+        mMap.setOnCameraChangeListener(this);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cmaLoc, (float) 18.5));
+
+        loadMarkersFromCSV();
     }
 
     /**
@@ -155,25 +186,31 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
      * each line follows: Name,Description,Lat,Long,Floor
      */
     private void loadMarkersFromCSV(){
+
         String line;
-        markers = new ArrayList<Art_Marker>();
+        allMarkers = new ArrayList<Art_Marker>();
+
+        //clear the map markers
+        //mMap.clear();
 
         try {
+            BufferedReader mBufferedReader = new BufferedReader(new FileReader(markerFile));
             mBufferedReader.readLine(); //Skip header line
             while ( (line = mBufferedReader.readLine()) != null) {
-                //Line structure is: Title, Artist, Lat, Lng
                 String[] info = line.split(",");
-                Log.d(TAG, "Title: "+info[TITLE] + ", Artist: "+info[ARTIST] + ", Lat: "+info[LAT]
-                        + ", Lng: "+info[LNG] + ", Floor: "+info[FLOOR] + ", File location: "+info[FILE_LOCATION]);
+//                Log.d(TAG, "Title: "+info[TITLE] + ", Artist: "+info[ARTIST] + ", Lat: "+info[LAT]
+//                        + ", Lng: "+info[LNG] + ", Floor: "+info[FLOOR] + ", File location: "+info[FILE_LOCATION]);
 
                 Art_Marker marker =  new Art_Marker(info[TITLE],
                                             info[ARTIST],
                                             Double.parseDouble(info[LAT]),
                                             Double.parseDouble(info[LNG]),
                                             Integer.parseInt(info[FLOOR]),
-                                            info[FILE_LOCATION]);
-                markers.add(marker);
-                mMap.addMarker(new MarkerOptions().position(marker.getCoords()).title(marker.getTitle()));
+                                            info[FILE_LOCATION],
+                                            mMap);
+
+                allMarkers.add(marker);
+                addMarkersToMap();
             }
 
 
@@ -243,4 +280,88 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     protected void startLocationUpdates() {
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
+
+    @Override
+    public void onIndoorBuildingFocused() {
+
+    }
+
+    @Override
+    public void onIndoorLevelActivated(IndoorBuilding indoorBuilding) {
+        currentLevel = indoorBuilding.getActiveLevelIndex();
+        Log.d(TAG, "On level: " + indoorBuilding.getActiveLevelIndex());
+        if (mCurrentLocation != null) {
+            Log.d(TAG, " Lat: " + mCurrentLocation.getLatitude() + "Lng: " + mCurrentLocation.getLongitude());
+        }
+
+        addMarkersToMap();
+    }
+
+
+    /**
+     * ENSURE THAT CAMERA ALWAYS STAYS WITHIN BOUNDS
+     * @param cameraPosition
+     */
+    @Override
+    public void onCameraChange(CameraPosition cameraPosition) {
+        LatLng point = cameraPosition.target;
+
+        if (mMapBounds.contains(point)) {
+            lastKnownCamPosition = cameraPosition;
+        } else {
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(lastKnownCamPosition));
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        //inflate the menu: this adds items to the action bar if it is present
+        getMenuInflater().inflate(R.menu.menu_opt, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.filter_markers: {
+                Log.d(TAG, "filter markers selected");
+                return true;
+            }
+            case R.id.add_new_marker: {
+                Log.d(TAG, "add new markers selected");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void addMarkersToMap(){
+        //clear the current map of all markers
+        removeAllMarkers();
+
+        if (filteredMarkers != null) {
+            for (Art_Marker marker: filteredMarkers){
+                if (marker.getFloor() == (2 - currentLevel)){
+                    marker.addToMap();
+                }
+            }
+            return;
+        }
+        //else no filters have been chosen so just add all markers
+        for (Art_Marker marker: allMarkers) {
+            if (marker.getFloor() == (2 - currentLevel)){
+                marker.addToMap();
+            }
+        }
+    }
+
+    public void removeAllMarkers(){
+        for (Art_Marker marker: allMarkers) {
+            marker.removeFromMap();
+        }
+    }
+
+
 }
+
