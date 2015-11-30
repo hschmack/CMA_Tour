@@ -1,5 +1,6 @@
 package com.example.hayden.cma_tour;
 
+import android.content.Intent;
 import android.location.Location;
 import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
@@ -21,21 +22,10 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.IndoorBuilding;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.MarkerOptions;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -43,14 +33,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity
         implements ConnectionCallbacks, OnConnectionFailedListener,
                     LocationListener, GoogleMap.OnIndoorStateChangeListener,
                     GoogleMap.OnCameraChangeListener {
-    private final String TAG = "CMU_MAP";
+    private final String TAG = "CMA_MAP";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private GoogleApiClient mGoogleApiClient;
     protected LocationRequest mLocationRequest;
@@ -84,6 +73,7 @@ public class MapsActivity extends FragmentActivity
     private final LatLng NE_BOUND = new LatLng(41.510087, -81.610124);
     private final LatLng SW_BOUND = new LatLng(41.507865, -81.613096);
     private CameraPosition lastKnownCamPosition;
+    private final int NEW_FILTER = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -325,6 +315,7 @@ public class MapsActivity extends FragmentActivity
         switch(item.getItemId()) {
             case R.id.filter_markers: {
                 Log.d(TAG, "filter markers selected");
+                dispatchNewFilterForm();
                 return true;
             }
             case R.id.add_new_marker: {
@@ -362,6 +353,18 @@ public class MapsActivity extends FragmentActivity
         }
     }
 
+    public void dispatchNewFilterForm() {
+        Intent formIntent = new Intent(this, FilterActivity.class);
+        startActivityForResult(formIntent, NEW_FILTER);
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == NEW_FILTER) {
+            if (resultCode == RESULT_OK) {
+                Log.d(TAG, "Successfully filtered markers");
+            }
+        }
+    }
 }
 
