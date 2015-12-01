@@ -1,5 +1,6 @@
 package com.example.hayden.cma_tour;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.text.Editable;
@@ -12,7 +13,7 @@ import android.widget.EditText;
 public class NewMarkerActivity extends Activity {
     private Button mSubmitMarkerButton;
     private EditText mTitle, mArtist, mYear, mGenre, mFloor;
-    private String title, artist, year, genre, lat, lng, floor, filename;
+    private String title, artist, year, genre, lat, lng, floor, filename, csvEntry;
 
     private TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -77,7 +78,9 @@ public class NewMarkerActivity extends Activity {
             public void onClick(View v) {
                 Log.d("CMA_MAP", "FINISHING MARKER SUBMISSION");
                 newMarkerOnSubmit();
-                setResult(RESULT_OK);
+                Intent intent = new Intent();
+                intent.putExtra("CSV_ENTRY", csvEntry);
+                setResult(RESULT_OK, intent);
                 finish();
 
             }
@@ -90,7 +93,7 @@ public class NewMarkerActivity extends Activity {
         year = mYear.getText().toString();
         genre = mGenre.getText().toString();
         floor = mFloor.getText().toString();
-        filename = MapsActivity.IMG_FOLDER + title;
+        filename = MapsActivity.IMG_FOLDER + "/" + title +"_"+artist;
 
         Art_Marker marker = new Art_Marker(title,
                 artist,
@@ -104,6 +107,7 @@ public class NewMarkerActivity extends Activity {
                 filename,
                 MapsActivity.mMap);
         MapsActivity.allMarkers.add(marker);
+        csvEntry = marker.getCSVEntry();
     }
 
 }
