@@ -9,4 +9,5 @@
     <string name="filter_markers_str">Filter Pieces</string>
     <string name="add_new_marker_str">Add New Piece</string>
     <string name="title_activity_form">FormActivity</string>
+    <string name="title_activity_new_marker">NewMarkerActivity</string>
 </resources>

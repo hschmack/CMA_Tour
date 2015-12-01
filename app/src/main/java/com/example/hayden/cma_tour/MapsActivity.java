@@ -40,7 +40,7 @@ public class MapsActivity extends FragmentActivity
                     LocationListener, GoogleMap.OnIndoorStateChangeListener,
                     GoogleMap.OnCameraChangeListener {
     private final String TAG = "CMA_MAP";
-    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    public static GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private GoogleApiClient mGoogleApiClient;
     protected LocationRequest mLocationRequest;
 
@@ -48,7 +48,7 @@ public class MapsActivity extends FragmentActivity
     private File markerFile;
     private StringBuilder mStringBuilder;
     private Button picButton;
-    private Location mCurrentLocation;
+    public static Location mCurrentLocation;
 
     //for keeping track of what is on the
     public static  ArrayList<Art_Marker> filteredMarkers;
@@ -80,6 +80,7 @@ public class MapsActivity extends FragmentActivity
     private final LatLng SW_BOUND = new LatLng(41.507865, -81.613096);
     private CameraPosition lastKnownCamPosition;
     private final int NEW_FILTER = 100;
+    private final int NEW_MARKER = 200;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -326,6 +327,7 @@ public class MapsActivity extends FragmentActivity
             }
             case R.id.add_new_marker: {
                 Log.d(TAG, "add new markers selected");
+                dispatchNewMarkerForm();
                 return true;
             }
         }
@@ -364,11 +366,21 @@ public class MapsActivity extends FragmentActivity
         startActivityForResult(formIntent, NEW_FILTER);
     }
 
+    public void dispatchNewMarkerForm(){
+        Intent markerIntent = new Intent(this, NewMarkerActivity.class);
+        startActivityForResult(markerIntent, NEW_MARKER);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == NEW_FILTER) {
             if (resultCode == RESULT_OK) {
                 Log.d(TAG, "Successfully filtered markers");
+            }
+        }
+        else if(resultCode == NEW_MARKER){
+            if(resultCode == RESULT_OK){
+                Log.d(TAG, "Successfully added marker");
             }
         }
     }
