@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.maps.model.Marker;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,7 +39,8 @@ import java.util.ArrayList;
 public class MapsActivity extends FragmentActivity
         implements ConnectionCallbacks, OnConnectionFailedListener,
                     LocationListener, GoogleMap.OnIndoorStateChangeListener,
-                    GoogleMap.OnCameraChangeListener {
+                    GoogleMap.OnCameraChangeListener,
+                    GoogleMap.OnMarkerClickListener{
     private final String TAG = "CMA_MAP";
     public static GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private GoogleApiClient mGoogleApiClient;
@@ -182,6 +184,7 @@ public class MapsActivity extends FragmentActivity
         mMapBounds = new LatLngBounds(SW_BOUND, NE_BOUND);
         lastKnownCamPosition = mMap.getCameraPosition();
 
+        mMap.setOnMarkerClickListener(this);
         mMap.setOnIndoorStateChangeListener(this);
         mMap.setOnCameraChangeListener(this);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cmaLoc, (float) 18.5));
@@ -403,6 +406,33 @@ public class MapsActivity extends FragmentActivity
                     Log.e(TAG, "ERROR WRITING NEW ENTRY TO CSV", ex);
                 }
             }
+        }
+    }
+    @Override
+    public boolean onMarkerClick(Marker marker){
+        String title = marker.getTitle();
+        String artist = marker.getSnippet();
+        Art_Marker aMarker = null;
+        for(Art_Marker a:allMarkers){
+            if(a.getTitle().equals(title) && a.getArtist().equals(artist)){
+                aMarker = a;
+            }
+            else{
+                return false;
+            }
+        }
+
+        if(aMarker != null) {
+            Intent markerIntent = new Intent(this, DisplayInfoActivity.class);
+            markerIntent.putExtra("title", aMarker.getTitle());
+            markerIntent.putExtra("artist", aMarker.getArtist());
+            markerIntent.putExtra("year", aMarker.getYear());
+            markerIntent.putExtra("genre", aMarker.getGenre());
+            startActivity(markerIntent);
+            return true;
+        }
+        else{
+            return false;
         }
     }
 }

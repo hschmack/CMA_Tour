@@ -54,6 +54,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="MapsActivity" />
         </activity>
+        <activity
+            android:name=".DisplayInfoActivity"
+            android:label="@string/title_activity_display_info"
+            android:parentActivityName=".MapsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.hayden.cma_tour.MapsActivity" />
+        </activity>
     </application>
 
 </manifest>

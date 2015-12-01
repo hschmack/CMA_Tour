@@ -95,7 +95,7 @@
         android:layout_alignParentStart="true"
         android:hint="Add Floor of Painting"
         android:singleLine="true"
-        android:inputType="numbergit"
+        android:inputType="number"
         android:imeOptions="actionDone" />
 
     <Button
