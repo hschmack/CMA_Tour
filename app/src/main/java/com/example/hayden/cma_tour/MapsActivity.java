@@ -46,7 +46,6 @@ public class MapsActivity extends FragmentActivity
 
     private BufferedWriter mBufferedWriter;
     private File markerFile;
-    private StringBuilder mStringBuilder;
     private Button picButton;
     public static Location mCurrentLocation;
 
@@ -70,8 +69,7 @@ public class MapsActivity extends FragmentActivity
     final static int BASEMENT = 2;
 
     //directories
-    public final static File IMG_FOLDER = new File(Environment.getExternalStoragePublicDirectory(
-                                                    Environment.DIRECTORY_DCIM), "CMA_IMAGES");
+    public static File IMG_FOLDER;
 
     private int currentLevel;
 
@@ -100,12 +98,14 @@ public class MapsActivity extends FragmentActivity
 
         //Set up I/O components: Reader, Writer, StringBuilder
         File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        IMG_FOLDER = new File(dcim, "CMA_IMGS");
+        IMG_FOLDER.mkdir();
         markerFile = new File(dcim, "CMUMarkers.csv");
-        mStringBuilder = new StringBuilder();
+        boolean writeHeadings = !(markerFile.exists());
         try {
-            mBufferedWriter = new BufferedWriter(new FileWriter(markerFile));
+            mBufferedWriter = new BufferedWriter(new FileWriter(markerFile, true));
 
-            String headings = "Title,Artist,Latitude,Longitude,Floor,FileLocation\n";
+            String headings = "Title,Artist,Year,Style,Latitude,Longitude,Floor,FileLocation\n";
             String entry1   = "Starry Night,Van Gogh,1889,Post-Impressionist,41.508513,-81.611770,1,DCIM/CMA_Photos/1_van\n";
             String entry2   = "Painting 2,Matt Damon,2001,Contemporary,41.508712,-81.611252,2,DCIM/CMA_Photos/2_matt\n";
             String entry3   = "Painting 3,Piet Mondiran,2050,Contemporary,41.509003,-81.611019,2,DCIM/CMA_Photos/2_matt\n";
@@ -113,13 +113,14 @@ public class MapsActivity extends FragmentActivity
 
             Log.d(TAG, "Writing headings to CSV");
             //write to CSV and reset SB / flush bufferedwriter
-            mBufferedWriter.write(headings);
-            mBufferedWriter.write(entry1);
-            mBufferedWriter.write(entry2);
-            mBufferedWriter.write(entry3);
-            mBufferedWriter.write(entry4);
+            if (writeHeadings) {
+                mBufferedWriter.write(headings);
+                mBufferedWriter.write(entry1);
+                mBufferedWriter.write(entry2);
+                mBufferedWriter.write(entry3);
+                mBufferedWriter.write(entry4);
+            }
 
-            mStringBuilder.setLength(0);
             mBufferedWriter.flush();
 
         } catch (IOException ex) {
@@ -190,7 +191,6 @@ public class MapsActivity extends FragmentActivity
 
     /**
      * Loads the markers from a csv file
-     * each line follows: Name,Description,Lat,Long,Floor
      */
     private void loadMarkersFromCSV(){
 
@@ -392,8 +392,16 @@ public class MapsActivity extends FragmentActivity
         }
         else if(requestCode == NEW_MARKER){
             if(resultCode == RESULT_OK){
-                Log.d(TAG, "Successfully added marker");
                 addMarkersToMap();
+                String entry = data.getStringExtra("CSV_ENTRY");
+                Log.d(TAG, "Successfully added marker");
+                Log.d(TAG, entry);
+                try {
+                    mBufferedWriter.write(entry);
+                    mBufferedWriter.flush();
+                } catch (IOException ex) {
+                    Log.e(TAG, "ERROR WRITING NEW ENTRY TO CSV", ex);
+                }
             }
         }
     }

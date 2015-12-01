@@ -94,4 +94,16 @@ public class Art_Marker {
             active = false;
         }
     }
+
+    public String getCSVEntry(){
+        //String headings = "Title,Artist,Year,Style,Latitude,Longitude,Floor,FileLocation\n";
+        return getTitle() + "," +
+                getArtist()+ "," +
+                getYear() + "," +
+                getGenre() + "," +
+                getCoords().latitude + ","+
+                getCoords().longitude + "," +
+                getFloor() + "," +
+                getFileLocation() +"\n";
+    }
 }
