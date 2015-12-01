@@ -390,9 +390,10 @@ public class MapsActivity extends FragmentActivity
                 addMarkersToMap();
             }
         }
-        else if(resultCode == NEW_MARKER){
+        else if(requestCode == NEW_MARKER){
             if(resultCode == RESULT_OK){
                 Log.d(TAG, "Successfully added marker");
+                addMarkersToMap();
             }
         }
     }
