@@ -115,10 +115,10 @@ public class MapsActivity extends FragmentActivity
             //write to CSV and reset SB / flush bufferedwriter
             if (writeHeadings) {
                 mBufferedWriter.write(headings);
-                mBufferedWriter.write(entry1);
-                mBufferedWriter.write(entry2);
-                mBufferedWriter.write(entry3);
-                mBufferedWriter.write(entry4);
+//                mBufferedWriter.write(entry1);
+//                mBufferedWriter.write(entry2);
+//                mBufferedWriter.write(entry3);
+//                mBufferedWriter.write(entry4);
             }
 
             mBufferedWriter.flush();
@@ -316,7 +316,7 @@ public class MapsActivity extends FragmentActivity
         if (mMapBounds.contains(point)) {
             lastKnownCamPosition = cameraPosition;
         } else {
-            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(lastKnownCamPosition));
+          //  mMap.moveCamera(CameraUpdateFactory.newCameraPosition(lastKnownCamPosition));
         }
     }
 
@@ -353,15 +353,16 @@ public class MapsActivity extends FragmentActivity
             Log.d(TAG, "Choosing Filtered Markers");
             for (Art_Marker marker: filteredMarkers){
                 if (marker.getFloor() == (2 - currentLevel)){
-                    marker.addToMap();
+                    marker.addToMapWithImg();
                 }
             }
             return;
         }
         //else no filters have been chosen so just add all markers
         for (Art_Marker marker: allMarkers) {
+            Log.d(TAG, "adding marker: " + marker.getTitle());
             if (marker.getFloor() == (2 - currentLevel)){
-                marker.addToMap();
+                marker.addToMapWithImg();
             }
         }
     }

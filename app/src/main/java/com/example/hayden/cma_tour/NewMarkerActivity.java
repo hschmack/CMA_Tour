@@ -1,8 +1,14 @@
 package com.example.hayden.cma_tour;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -10,10 +16,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class NewMarkerActivity extends Activity {
     private Button mSubmitMarkerButton;
     private EditText mTitle, mArtist, mYear, mGenre, mFloor;
     private String title, artist, year, genre, lat, lng, floor, filename, csvEntry;
+
+    public static final int REQUEST_IMAGE_CAPTURE = 1;
+    private Uri tmpPath;
+    private Art_Marker marker;
 
     private TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -94,20 +109,67 @@ public class NewMarkerActivity extends Activity {
         genre = mGenre.getText().toString();
         floor = mFloor.getText().toString();
         filename = MapsActivity.IMG_FOLDER + "/" + title +"_"+artist;
+        dispatchTakePictureIntent();
 
-        Art_Marker marker = new Art_Marker(title,
+        marker = new Art_Marker(title,
                 artist,
                 Integer.parseInt(year),
                 genre,
-//                MapsActivity.mCurrentLocation.getLatitude(),
-//                MapsActivity.mCurrentLocation.getLongitude(),
-                41.508858,
-                -81.611819,
+                MapsActivity.mCurrentLocation.getLatitude(),
+                MapsActivity.mCurrentLocation.getLongitude(),
+//                41.508858,
+//                -81.611819,
                 Integer.parseInt(floor),
-                filename,
+                tmpPath.toString(),
                 MapsActivity.mMap);
+
         MapsActivity.allMarkers.add(marker);
         csvEntry = marker.getCSVEntry();
     }
 
+    /**
+     * Taken from http://developer.android.com/training/camera/photobasics.html
+     */
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex){
+                Log.d("ERROR", "Error creating the image file");
+            }
+            if (photoFile != null){
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                tmpPath = Uri.fromFile(photoFile);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+
+    /**
+     * Create the image file that is created on dispatchTakePictureIntent
+     * @throws IOException
+     */
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String imageFileName = title + "_" + artist;
+
+        File image = File.createTempFile(imageFileName, ".jpg", MapsActivity.IMG_FOLDER);
+
+        return image;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK){
+            //Write to CSV
+
+//            Bitmap imageBitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(tmpPath.getPath()), 96, 96);
+//            marker.addToMapWithImg(imageBitmap);
+        }
+    }
 }
