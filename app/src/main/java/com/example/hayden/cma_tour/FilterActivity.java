@@ -14,6 +14,7 @@ public class FilterActivity extends Activity {
 
     private final String TAG = "CMA_MAP";
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

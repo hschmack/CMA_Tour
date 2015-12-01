@@ -57,15 +57,21 @@ public class MapsActivity extends FragmentActivity
     // Indexes in the CSV
     final static int TITLE = 0;
     final static int ARTIST = 1;
-    final static int LAT = 2;
-    final static int LNG = 3;
-    final static int FLOOR = 4;
-    final static int FILE_LOCATION = 5;
+    final static int YEAR = 2;
+    final static int GENRE = 3;
+    final static int LAT = 4;
+    final static int LNG = 5;
+    final static int FLOOR = 6;
+    final static int FILE_LOCATION = 7;
 
     //map levels are counted from highest to lowest... level 2 = 0
     final static int LEVEL_2 = 0;
     final static int LEVEL_1 = 1;
     final static int BASEMENT = 2;
+
+    //directories
+    public final static File IMG_FOLDER = new File(Environment.getExternalStoragePublicDirectory(
+                                                    Environment.DIRECTORY_DCIM), "CMA_IMAGES");
 
     private int currentLevel;
 
@@ -99,8 +105,8 @@ public class MapsActivity extends FragmentActivity
             mBufferedWriter = new BufferedWriter(new FileWriter(markerFile));
 
             String headings = "Title,Artist,Latitude,Longitude,Floor,FileLocation\n";
-            String entry1   = "Starry Night,Van Gogh,41.508513,-81.611770,1,DCIM/CMA_Photos/1_van\n";
-            String entry2   = "Painting 2,Matt Damon,41.508712,-81.611252,2,DCIM/CMA_Photos/2_matt\n";
+            String entry1   = "Starry Night,Van Gogh,1889,Post-Impressionist,41.508513,-81.611770,1,DCIM/CMA_Photos/1_van\n";
+            String entry2   = "Painting 2,Matt Damon,2001,Contemporary,41.508712,-81.611252,2,DCIM/CMA_Photos/2_matt\n";
 
             Log.d(TAG, "Writing headings to CSV");
             //write to CSV and reset SB / flush bufferedwriter
@@ -188,11 +194,11 @@ public class MapsActivity extends FragmentActivity
             mBufferedReader.readLine(); //Skip header line
             while ( (line = mBufferedReader.readLine()) != null) {
                 String[] info = line.split(",");
-//                Log.d(TAG, "Title: "+info[TITLE] + ", Artist: "+info[ARTIST] + ", Lat: "+info[LAT]
-//                        + ", Lng: "+info[LNG] + ", Floor: "+info[FLOOR] + ", File location: "+info[FILE_LOCATION]);
 
                 Art_Marker marker =  new Art_Marker(info[TITLE],
                                             info[ARTIST],
+                                            Integer.parseInt(info[YEAR]),
+                                            info[GENRE],
                                             Double.parseDouble(info[LAT]),
                                             Double.parseDouble(info[LNG]),
                                             Integer.parseInt(info[FLOOR]),
