@@ -1,5 +1,6 @@
 package com.example.hayden.cma_tour;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -38,6 +39,7 @@ public class FilterActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_form);
+        setTitle("Filter Pieces");
 
         MapsActivity.filteredMarkers = new ArrayList<Art_Marker>();
 
@@ -165,6 +167,16 @@ public class FilterActivity extends Activity {
                 break;
             default:
                 return true;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        ActionBar actionBar = getActionBar();
+        if(actionBar != null) {
+            actionBar.setHomeButtonEnabled(false);      // Disable the button
+            actionBar.setDisplayHomeAsUpEnabled(false); // Remove the left caret
         }
         return true;
     }

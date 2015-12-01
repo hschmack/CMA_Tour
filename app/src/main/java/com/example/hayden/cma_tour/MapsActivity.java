@@ -48,7 +48,7 @@ public class MapsActivity extends FragmentActivity
 
     private BufferedWriter mBufferedWriter;
     private File markerFile;
-    private Button picButton;
+    private Button unFilterButton;
     public static Location mCurrentLocation;
 
     //for keeping track of what is on the
@@ -88,11 +88,12 @@ public class MapsActivity extends FragmentActivity
         setContentView(R.layout.activity_maps);
 
         // set up the button
-        picButton = (Button) findViewById(R.id.photobutton);
-        picButton.setOnClickListener(new View.OnClickListener() {
+        unFilterButton = (Button) findViewById(R.id.unfilter_button);
+        unFilterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                removeAllMarkers();
+                filteredMarkers = null;
+                addMarkersToMap();
             }
         });
 
@@ -411,6 +412,7 @@ public class MapsActivity extends FragmentActivity
     }
     @Override
     public boolean onMarkerClick(Marker marker){
+        Log.d(TAG, "MARKER CLICKED: " + marker.getTitle());
         String title = marker.getTitle();
         String artist = marker.getSnippet();
         Art_Marker aMarker = null;
@@ -418,17 +420,20 @@ public class MapsActivity extends FragmentActivity
             if(a.getTitle().equals(title) && a.getArtist().equals(artist)){
                 aMarker = a;
             }
-            else{
-                return false;
-            }
         }
+        if (aMarker == null) {
+            Log.d(TAG, "MARKER CLICKED: " +marker.getTitle() + " RETURNING FALSE");
+            return false;
+        }
+        Log.d(TAG, "MARKER CLICKED: " + marker.getTitle() + " FOUND ART_MARKER");
 
         if(aMarker != null) {
             Intent markerIntent = new Intent(this, DisplayInfoActivity.class);
             markerIntent.putExtra("title", aMarker.getTitle());
             markerIntent.putExtra("artist", aMarker.getArtist());
-            markerIntent.putExtra("year", aMarker.getYear());
+            markerIntent.putExtra("year", aMarker.getYear()+"");
             markerIntent.putExtra("genre", aMarker.getGenre());
+            markerIntent.putExtra("uri", aMarker.getFileLocation());
             startActivity(markerIntent);
             return true;
         }

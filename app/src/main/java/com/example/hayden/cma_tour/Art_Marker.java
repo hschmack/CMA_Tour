@@ -106,7 +106,7 @@ public class Art_Marker {
             active = true;
         }
         marker.setIcon(BitmapDescriptorFactory.fromBitmap(imageBitmap));
-        marker.showInfoWindow();
+//        marker.showInfoWindow();
     }
 
 
