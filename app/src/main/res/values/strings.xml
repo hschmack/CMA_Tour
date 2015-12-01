@@ -10,4 +10,6 @@
     <string name="add_new_marker_str">Add New Piece</string>
     <string name="title_activity_form">FormActivity</string>
     <string name="title_activity_new_marker">NewMarkerActivity</string>
+    <string name="artist_spinner_prompt">Choose Artist</string>
+    <string name="style_spinner_prompt">Choose Style</string>
 </resources>

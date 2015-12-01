@@ -92,7 +92,7 @@ public class MapsActivity extends FragmentActivity
         picButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadMarkersFromCSV();
+                removeAllMarkers();
             }
         });
 
@@ -108,12 +108,16 @@ public class MapsActivity extends FragmentActivity
             String headings = "Title,Artist,Latitude,Longitude,Floor,FileLocation\n";
             String entry1   = "Starry Night,Van Gogh,1889,Post-Impressionist,41.508513,-81.611770,1,DCIM/CMA_Photos/1_van\n";
             String entry2   = "Painting 2,Matt Damon,2001,Contemporary,41.508712,-81.611252,2,DCIM/CMA_Photos/2_matt\n";
+            String entry3   = "Painting 3,Piet Mondiran,2050,Contemporary,41.509003,-81.611019,2,DCIM/CMA_Photos/2_matt\n";
+            String entry4   = "VG2,Van Gogh,1890,Pointalist,41.508720,-81.612125,1,DCIM/CMA_Photos/2_matt\n";
 
             Log.d(TAG, "Writing headings to CSV");
             //write to CSV and reset SB / flush bufferedwriter
             mBufferedWriter.write(headings);
             mBufferedWriter.write(entry1);
             mBufferedWriter.write(entry2);
+            mBufferedWriter.write(entry3);
+            mBufferedWriter.write(entry4);
 
             mStringBuilder.setLength(0);
             mBufferedWriter.flush();
@@ -124,6 +128,12 @@ public class MapsActivity extends FragmentActivity
 
         setUpMapIfNeeded();
         buildGoogleApiClient();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
     }
 
     @Override
@@ -340,6 +350,7 @@ public class MapsActivity extends FragmentActivity
         removeAllMarkers();
 
         if (filteredMarkers != null) {
+            Log.d(TAG, "Choosing Filtered Markers");
             for (Art_Marker marker: filteredMarkers){
                 if (marker.getFloor() == (2 - currentLevel)){
                     marker.addToMap();
@@ -376,6 +387,7 @@ public class MapsActivity extends FragmentActivity
         if (requestCode == NEW_FILTER) {
             if (resultCode == RESULT_OK) {
                 Log.d(TAG, "Successfully filtered markers");
+                addMarkersToMap();
             }
         }
         else if(resultCode == NEW_MARKER){
