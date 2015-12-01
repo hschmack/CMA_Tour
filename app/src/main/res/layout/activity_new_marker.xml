@@ -76,6 +76,7 @@
         android:layout_below="@+id/MarkerGenre"
         android:layout_alignParentStart="true"
         android:hint="Add Genre of Painting"
+        android:singleLine="true"
         android:imeOptions="actionNext" />
 
     <TextView
@@ -94,6 +95,7 @@
         android:layout_alignParentStart="true"
         android:hint="Add Floor of Painting"
         android:singleLine="true"
+        android:inputType="numbergit"
         android:imeOptions="actionDone" />
 
     <Button
