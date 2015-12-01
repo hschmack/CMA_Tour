@@ -21,7 +21,9 @@
         android:id="@+id/editTitleText"
         android:hint="Add Title of Painting"
         android:layout_below="@+id/MarkerTitle"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:singleLine="true"
+        android:imeOptions="actionNext"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -36,7 +38,9 @@
         android:layout_height="wrap_content"
         android:id="@+id/editArtistText"
         android:hint="Add Artist of Painting"
-        android:layout_below="@+id/MarkerArtist" />
+        android:layout_below="@+id/MarkerArtist"
+        android:singleLine="true"
+        android:imeOptions="actionNext" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -52,7 +56,10 @@
         android:id="@+id/editYearText"
         android:layout_below="@+id/MarkerYear"
         android:layout_alignParentStart="true"
-        android:hint="Add Year of Painting" />
+        android:hint="Add Year of Painting"
+        android:inputType="number"
+        android:singleLine="true"
+        android:imeOptions="actionNext" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -68,7 +75,8 @@
         android:id="@+id/editGenreText"
         android:layout_below="@+id/MarkerGenre"
         android:layout_alignParentStart="true"
-        android:hint="Add Genre of Painting" />
+        android:hint="Add Genre of Painting"
+        android:imeOptions="actionNext" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -84,7 +92,9 @@
         android:id="@+id/editFloorText"
         android:layout_below="@+id/MarkerFloor"
         android:layout_alignParentStart="true"
-        android:hint="Add Floor of Painting" />
+        android:hint="Add Floor of Painting"
+        android:singleLine="true"
+        android:imeOptions="actionDone" />
 
     <Button
         android:layout_width="wrap_content"
