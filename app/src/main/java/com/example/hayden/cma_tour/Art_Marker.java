@@ -120,6 +120,18 @@ public class Art_Marker {
         }
     }
 
+    public void hideMarker() {
+        if (marker != null) {
+            marker.setVisible(false);
+        }
+    }
+
+    public void showMarker() {
+        if (marker != null) {
+            marker.setVisible(true);
+        }
+    }
+
     public String getCSVEntry(){
         //String headings = "Title,Artist,Year,Style,Latitude,Longitude,Floor,FileLocation\n";
         return getTitle() + "," +

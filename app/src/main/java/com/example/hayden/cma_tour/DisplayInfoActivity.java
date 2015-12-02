@@ -31,7 +31,7 @@ public class DisplayInfoActivity extends Activity {
         Uri imgPath = Uri.parse(intent.getStringExtra("uri"));
         Bitmap img = BitmapFactory.decodeFile(imgPath.getPath());
 
-        String info = "Title: " + title + "\nArtist: " + artist + "\nYear: " + year + "\nGenre: " + genre;
+        String info = "Title: " + title + "\nArtist: " + artist + "\nYear: " + year + "\nStyle: " + genre;
 
         TextView textView = (TextView) findViewById(R.id.marker_info);
         ImageView imgView = (ImageView) findViewById(R.id.marker_pic);

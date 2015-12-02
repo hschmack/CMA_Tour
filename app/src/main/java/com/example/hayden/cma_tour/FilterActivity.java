@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class FilterActivity extends Activity {
     private Button mSubmitButton;
@@ -84,9 +85,7 @@ public class FilterActivity extends Activity {
             }
         });
         artists = new ArrayList<String>();
-        artists.add("No Selection");
         styles = new ArrayList<String>();
-        styles.add("No Selection");
         setUpSpinners();
     }
 
@@ -104,6 +103,12 @@ public class FilterActivity extends Activity {
                 styles.add(art.getGenre());
             }
         }
+        Collections.sort(artists);
+        Collections.sort(styles);
+
+        artists.add(0,"No Selection");
+        styles.add(0,"No Selection");
+
         ArrayAdapter<String> artistSpinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, artists);
         ArrayAdapter<String> styleSpinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, styles);
 

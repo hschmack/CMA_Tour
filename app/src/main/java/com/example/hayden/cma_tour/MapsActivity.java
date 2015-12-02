@@ -93,7 +93,7 @@ public class MapsActivity extends FragmentActivity
             @Override
             public void onClick(View v) {
                 filteredMarkers = null;
-                addMarkersToMap();
+                addMarkersToMap(false);
             }
         });
 
@@ -109,19 +109,11 @@ public class MapsActivity extends FragmentActivity
             mBufferedWriter = new BufferedWriter(new FileWriter(markerFile, true));
 
             String headings = "Title,Artist,Year,Style,Latitude,Longitude,Floor,FileLocation\n";
-            String entry1   = "Starry Night,Van Gogh,1889,Post-Impressionist,41.508513,-81.611770,1,DCIM/CMA_Photos/1_van\n";
-            String entry2   = "Painting 2,Matt Damon,2001,Contemporary,41.508712,-81.611252,2,DCIM/CMA_Photos/2_matt\n";
-            String entry3   = "Painting 3,Piet Mondiran,2050,Contemporary,41.509003,-81.611019,2,DCIM/CMA_Photos/2_matt\n";
-            String entry4   = "VG2,Van Gogh,1890,Pointalist,41.508720,-81.612125,1,DCIM/CMA_Photos/2_matt\n";
 
             Log.d(TAG, "Writing headings to CSV");
             //write to CSV and reset SB / flush bufferedwriter
             if (writeHeadings) {
                 mBufferedWriter.write(headings);
-//                mBufferedWriter.write(entry1);
-//                mBufferedWriter.write(entry2);
-//                mBufferedWriter.write(entry3);
-//                mBufferedWriter.write(entry4);
             }
 
             mBufferedWriter.flush();
@@ -189,6 +181,7 @@ public class MapsActivity extends FragmentActivity
         mMap.setOnIndoorStateChangeListener(this);
         mMap.setOnCameraChangeListener(this);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cmaLoc, (float) 18.5));
+        mMap.setMyLocationEnabled(true);
 
         loadMarkersFromCSV();
     }
@@ -221,10 +214,8 @@ public class MapsActivity extends FragmentActivity
                                             mMap);
 
                 allMarkers.add(marker);
-                addMarkersToMap();
             }
-
-
+            addMarkersToMap(true);
         } catch (IOException ex) {
             Log.e(TAG, "Error reading from file", ex);
         }
@@ -283,6 +274,7 @@ public class MapsActivity extends FragmentActivity
     @Override
     public void onLocationChanged(Location location) {
         mCurrentLocation = location;
+//        Log.d(TAG, "NEW LATLMG: " + mCurrentLocation.getLatitude() + ", " + mCurrentLocation.getLongitude());
     }
 
     /**
@@ -302,10 +294,10 @@ public class MapsActivity extends FragmentActivity
         currentLevel = indoorBuilding.getActiveLevelIndex();
         Log.d(TAG, "On level: " + indoorBuilding.getActiveLevelIndex());
         if (mCurrentLocation != null) {
-            Log.d(TAG, " Lat: " + mCurrentLocation.getLatitude() + "Lng: " + mCurrentLocation.getLongitude());
+//            Log.d(TAG, " Lat: " + mCurrentLocation.getLatitude() + "Lng: " + mCurrentLocation.getLongitude());
         }
 
-        addMarkersToMap();
+        addMarkersToMap(false);
     }
 
 
@@ -320,7 +312,7 @@ public class MapsActivity extends FragmentActivity
         if (mMapBounds.contains(point)) {
             lastKnownCamPosition = cameraPosition;
         } else {
-          //  mMap.moveCamera(CameraUpdateFactory.newCameraPosition(lastKnownCamPosition));
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(lastKnownCamPosition));
         }
     }
 
@@ -349,15 +341,22 @@ public class MapsActivity extends FragmentActivity
         return false;
     }
 
-    public void addMarkersToMap(){
-        //clear the current map of all markers
-        removeAllMarkers();
+    public void addMarkersToMap(boolean firstRun){
+        if (firstRun) {
+            for (Art_Marker art : allMarkers) {
+                art.addToMapWithImg();
+            }
+            return;
+        }
+
+        //else set all markers invisible and choose the right markers
+        setAllMarkersInvisible();
 
         if (filteredMarkers != null) {
             Log.d(TAG, "Choosing Filtered Markers");
             for (Art_Marker marker: filteredMarkers){
                 if (marker.getFloor() == (2 - currentLevel)){
-                    marker.addToMapWithImg();
+                    marker.showMarker();
                 }
             }
             return;
@@ -366,14 +365,9 @@ public class MapsActivity extends FragmentActivity
         for (Art_Marker marker: allMarkers) {
             Log.d(TAG, "adding marker: " + marker.getTitle());
             if (marker.getFloor() == (2 - currentLevel)){
-                marker.addToMapWithImg();
-            }
-        }
-    }
+                marker.showMarker();
 
-    public void removeAllMarkers(){
-        for (Art_Marker marker: allMarkers) {
-            marker.removeFromMap();
+            }
         }
     }
 
@@ -392,12 +386,12 @@ public class MapsActivity extends FragmentActivity
         if (requestCode == NEW_FILTER) {
             if (resultCode == RESULT_OK) {
                 Log.d(TAG, "Successfully filtered markers");
-                addMarkersToMap();
+                addMarkersToMap(false);
             }
         }
         else if(requestCode == NEW_MARKER){
             if(resultCode == RESULT_OK){
-                addMarkersToMap();
+                addMarkersToMap(false);
                 String entry = data.getStringExtra("CSV_ENTRY");
                 Log.d(TAG, "Successfully added marker");
                 Log.d(TAG, entry);
@@ -439,6 +433,14 @@ public class MapsActivity extends FragmentActivity
         }
         else{
             return false;
+        }
+    }
+
+    public void setAllMarkersInvisible() {
+        for (Art_Marker art : allMarkers) {
+            if (art != null) {
+                art.hideMarker();
+            }
         }
     }
 }
